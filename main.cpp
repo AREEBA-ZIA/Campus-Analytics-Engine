@@ -4,6 +4,7 @@
 #include "student_ops.h"
 #include "course_ops.h"
 #include "attendance.h"
+#include "grades.h"
 
 using namespace std;
 
@@ -169,6 +170,51 @@ void attendanceMenu() {
     } while (choice != 0);
 }
 
+void gradesMenu() {
+    int choice;
+    do {
+        cout << "\n--- Grade Management ---\n";
+        cout << "1. Enter Marks\n";
+        cout << "2. View Student GPA\n";
+        cout << "3. View Class Statistics\n";
+        cout << "4. Apply Attendance Penalty\n";
+        cout << "0. Back\n";
+        cout << "Choice: ";
+        cin >> choice;
+
+        if (choice == 1) {
+            string roll, code;
+            cout << "Roll: "; cin >> roll;
+            cout << "Course Code: "; cin >> code;
+            enterMarks(roll, code);
+        }
+        else if (choice == 2) {
+            string roll; int sem;
+            cout << "Roll: "; cin >> roll;
+            cout << "Semester: "; cin >> sem;
+            double gpa = computeGPA(roll, sem);
+            int g = (int)(gpa * 100);
+            cout << "Semester GPA: " << g/100 << "."
+                 << (g%100 < 10 ? "0" : "") << g%100 << "\n";
+        }
+        else if (choice == 3) {
+            string code;
+            cout << "Course Code: "; cin >> code;
+            Stats s = computeClassStats(code);
+            cout << "Highest: " << s.highest << "\n";
+            cout << "Lowest:  " << s.lowest  << "\n";
+            cout << "Mean:    " << s.mean    << "\n";
+            cout << "Median:  " << s.median  << "\n";
+        }
+        else if (choice == 4) {
+            string roll, code;
+            cout << "Roll: "; cin >> roll;
+            cout << "Course Code: "; cin >> code;
+            applyAttendancePenalty(roll, code);
+        }
+    } while (choice != 0);
+}
+
 int main() {
     int choice;
     do {
@@ -189,7 +235,7 @@ int main() {
             case 1: studentMenu(); break;
             case 2: courseMenu(); break;
             case 3: attendanceMenu(); break;
-            case 4: cout << "\n[Grade module coming soon]\n"; break;
+            case 4: gradesMenu(); break;
             case 5: cout << "\n[Fee module coming soon]\n"; break;
             case 6: cout << "\n[Reports module coming soon]\n"; break;
             case 0: cout << "\nGoodbye!\n"; break;
