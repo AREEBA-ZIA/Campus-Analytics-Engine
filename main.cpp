@@ -5,6 +5,8 @@
 #include "course_ops.h"
 #include "attendance.h"
 #include "grades.h"
+#include "fee_tracker.h"
+#include "reports.h"
 
 using namespace std;
 
@@ -16,7 +18,8 @@ void studentMenu() {
         cout << "2. Search by Roll\n";
         cout << "3. Search by Name\n";
         cout << "4. List All Active Students\n";
-        cout << "5. Delete Student (soft)\n";
+        cout << "5. Update Student\n";
+        cout << "6. Delete Student (soft)\n";
         cout << "0. Back\n";
         cout << "Choice: ";
         cin >> choice;
@@ -61,6 +64,14 @@ void studentMenu() {
                      << setw(10) << list[i][4] << "\n";
         }
         else if (choice == 5) {
+            string roll, val;
+            int col;
+            cout << "Roll: "; cin >> roll;
+            cout << "Field to update (1=name, 2=dept, 3=sem, 4=cgpa): "; cin >> col;
+            cout << "New value: "; cin >> val;
+            updateStudent(roll, col, val);
+        }
+        else if (choice == 6) {
             string roll;
             cout << "Enter Roll to delete: "; cin >> roll;
             softDelete(roll);
@@ -215,6 +226,104 @@ void gradesMenu() {
     } while (choice != 0);
 }
 
+void feeMenu() {
+    int choice;
+    do {
+        cout << "\n--- Fee Management ---\n";
+        cout << "1. Record Payment\n";
+        cout << "2. Compute Late Fine\n";
+        cout << "3. Generate Receipt\n";
+        cout << "4. View Fee Defaulters\n";
+        cout << "0. Back\n";
+        cout << "Choice: ";
+        cin >> choice;
+
+        if (choice == 1) {
+            string roll, payDate, method;
+            int sem; double amount;
+            cout << "Roll: "; cin >> roll;
+            cout << "Semester: "; cin >> sem;
+            cout << "Amount: "; cin >> amount;
+            cout << "Payment Date (DD-MM-YYYY): "; cin >> payDate;
+            cout << "Method (Cash/Online/Bank): "; cin >> method;
+            recordPayment(roll, sem, amount, payDate, method);
+        }
+        else if (choice == 2) {
+            string roll; int sem;
+            cout << "Roll: "; cin >> roll;
+            cout << "Semester: "; cin >> sem;
+            double fine = computeLateFine(roll, sem);
+            cout << "Late Fine: " << (int)fine << "\n";
+        }
+        else if (choice == 3) {
+            string roll; int sem;
+            cout << "Roll: "; cin >> roll;
+            cout << "Semester: "; cin >> sem;
+            generateReceipt(roll, sem);
+        }
+        else if (choice == 4) {
+            vector<vector<string>> def = getDefaulters();
+            if (def.empty()) { cout << "No fee defaulters.\n"; }
+            else {
+                cout << "\n" << left << setw(15) << "Roll"
+                     << setw(10) << "Total"
+                     << setw(10) << "Paid"
+                     << setw(10) << "Balance"
+                     << setw(10) << "Status" << "\n";
+                cout << string(55, '-') << "\n";
+                for (int i = 0; i < (int)def.size(); i++) {
+                    double bal = 0;
+                    // parse manually
+                    double total = 0, paid = 0;
+                    string ts = def[i][3], ps = def[i][4];
+                    for (int j=0;j<(int)ts.length();j++) if(ts[j]!='.') total=total*10+(ts[j]-'0'); else { double f=0,d=1; for(int k=j+1;k<(int)ts.length();k++){f=f*10+(ts[k]-'0');d*=10;} total+=f/d; break; }
+                    for (int j=0;j<(int)ps.length();j++) if(ps[j]!='.') paid=paid*10+(ps[j]-'0'); else { double f=0,d=1; for(int k=j+1;k<(int)ps.length();k++){f=f*10+(ps[k]-'0');d*=10;} paid+=f/d; break; }
+                    bal = total - paid;
+                    cout << left << setw(15) << def[i][1]
+                         << setw(10) << def[i][3]
+                         << setw(10) << def[i][4]
+                         << setw(10) << (int)bal
+                         << setw(10) << def[i][8] << "\n";
+                }
+            }
+        }
+    } while (choice != 0);
+}
+
+void reportsMenu() {
+    int choice;
+    do {
+        cout << "\n--- Reports ---\n";
+        cout << "1. Merit List\n";
+        cout << "2. Attendance Defaulters\n";
+        cout << "3. Fee Defaulters\n";
+        cout << "4. Semester Result Sheet\n";
+        cout << "5. Department Summary\n";
+        cout << "6. Export Report to File\n";
+        cout << "0. Back\n";
+        cout << "Choice: ";
+        cin >> choice;
+
+        if (choice == 1) printMeritList();
+        else if (choice == 2) printAttendanceDefaulters();
+        else if (choice == 3) printFeeDefaulters();
+        else if (choice == 4) {
+            int sem;
+            cout << "Semester: "; cin >> sem;
+            printSemesterResult(sem);
+        }
+        else if (choice == 5) printDepartmentSummary();
+        else if (choice == 6) {
+            int rpt, sem = 0;
+            cout << "Which report to export?\n";
+            cout << "1=Merit  2=Att.Defaulters  3=Fee Defaulters  4=Sem Result  5=Dept Summary\n";
+            cout << "Choice: "; cin >> rpt;
+            if (rpt == 4) { cout << "Semester: "; cin >> sem; }
+            exportReportToFile(rpt, sem);
+        }
+    } while (choice != 0);
+}
+
 int main() {
     int choice;
     do {
@@ -231,13 +340,13 @@ int main() {
         cout << "\nEnter your choice: ";
         cin >> choice;
 
-        switch(choice) {
-            case 1: studentMenu(); break;
-            case 2: courseMenu(); break;
+        switch (choice) {
+            case 1: studentMenu();    break;
+            case 2: courseMenu();     break;
             case 3: attendanceMenu(); break;
-            case 4: gradesMenu(); break;
-            case 5: cout << "\n[Fee module coming soon]\n"; break;
-            case 6: cout << "\n[Reports module coming soon]\n"; break;
+            case 4: gradesMenu();     break;
+            case 5: feeMenu();        break;
+            case 6: reportsMenu();    break;
             case 0: cout << "\nGoodbye!\n"; break;
             default: cout << "\nInvalid choice!\n";
         }
