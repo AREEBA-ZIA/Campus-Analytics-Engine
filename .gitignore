@@ -1,0 +1,5 @@
+*.exe
+buildlog.txt
+error.txt
+full_output.txt
+test.cpp
